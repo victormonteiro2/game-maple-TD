@@ -10,7 +10,7 @@ body {
   background-image: url('./images/background.jpg');
   background-repeat: no-repeat;
   background-size: cover;
-  height: 90%;
+  height: 100%;
 }
 
 #canvas {
@@ -19,11 +19,9 @@ body {
   background-size: cover;
   border: 2px solid #00000080;
   box-shadow: 2px 2px 15px #00000080;
-  width: 40vw;
-  background-image: url('./images/background-game.jpg');
-  background-repeat: no-repeat;
-
-  /* margin-bottom: 100px; */
+  width: 60vw;
+  height: 75vh;
+  background-image: url('./images/background-game-short.png');
 }
 
 img {
@@ -31,7 +29,7 @@ img {
 }
 
 .margin-top {
-  margin-top: 30px;
+  margin-top: 50px;
 }
 
 /* .margin-bottom {

@@ -23,7 +23,7 @@ const theCanvas = document.getElementById('canvas');
 const ctx = theCanvas.getContext('2d');
 let player;
 let torre;
-let shotsArcher = [];
+let shots = [];
 const arrow = [];
 const enemiesList = [];
 
@@ -34,9 +34,9 @@ const myGameArea = {
   frames: 0,
   start: function () {
     this.interval = setInterval(updateGameArea, 20);
-    player = new Character(880, 450, 60, 100, './images/elfo0.png');
+    player = new Character(880, 537, 70, 130, './images/elfo0.png');
     torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
-    arrow = new Projectile(500, 300, 50, 20, './images/flecha.png');
+    arrow = new Projectile(500, 500, 50, 20, './images/flecha.png');
   },
   stop: function () {
     clearInterval(this.interval);
@@ -66,18 +66,28 @@ function updateGameArea() {
 
 class Character {
   // <== genereic character
-  constructor(x, y, width, height, imageSrc) {
+  constructor(x, y, width, height, imageSrc, health, attackDamage) {
     this.img = new Image();
-
     this.img.src = imageSrc;
+
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
-    this.isShooting = false;
+    this.health = health;
+    this.attackDamage = attackDamage;
     this.img.onload = this.update;
     this.id = Math.round(Math.random() * 10000);
   }
+
+  receiveDamage(damage) {
+    this.health -= damage;
+  }
+
+  shoot(shooter) {
+    shots.unshift(new Shot(shooter, this.attackDamage, this.x, this.y + 11));
+  }
+
   update() {
     // console.log(this);
     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
@@ -98,6 +108,15 @@ class Projectile {
     this.img.onload = this.update;
   }
 
+  crashWith(arrow) {
+    return !(
+      this.bottom() < obstacle.top() ||
+      this.top() > obstacle.bottom() ||
+      this.right() < obstacle.left() ||
+      this.left() > arrow.right()
+    );
+  }
+
   update() {
     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
   }
@@ -105,15 +124,19 @@ class Projectile {
 
 function updateProjectile() {
   myGameArea.frames += 1;
-  if (myGameArea.frames % 240 === 0) {
+  if (myGameArea.frames % 120 === 0) {
     let x = 0;
 
-    arrow.push(new Projectile(865, 485, 60, 30, './images/flecha.png'));
+    arrow.push(new Projectile(865, 585, 60, 30, './images/flecha.png'));
   }
 
   for (i = 0; i < arrow.length; i++) {
-    arrow[i].x += -10;
+    arrow[i].x += -20;
     arrow[i].update();
+  }
+  if (myObstacles[i].x <= 0) {
+    // COORD. MENOR Q ZERO => SPLICE (REMOVER DO ARRAY)
+    arrow.splice();
   }
 }
 
