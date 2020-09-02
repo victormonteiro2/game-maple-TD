@@ -76,67 +76,9 @@ class Character {
     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
   }
   // COMEÇA O TESTE DE PROJETIL **************
-
-  shoot(shooter) {
-    shotsArcher.unshift(
-      new Shot(
-        shooter,
-        this.attackDamage,
-        this.x,
-        this.y + 20 + 40 * Math.floor(Math.random() * 2)
-      )
-    );
-  }
-
-  // drawBoss() {
-  //   context.drawImage(archer, wily.x, wily.y, 65, 75);
-  // }
-
-  drawBossPower(shot) {
-    context.lineWidth = 2;
-    context.fillStyle = 'red';
-    context.beginPath();
-    context.arc(shot.x, shot.y, 4, 0, 2 * Math.PI);
-    context.fill();
-    context.strokeStyle = 'white';
-    context.stroke();
-  }
-
-  shotUpdate() {
-    shotsWily.forEach((shot, i) => {
-      if (
-        shot.x > megaman.x + 20 ||
-        (shot.x < megaman.x && shot.x > 1) ||
-        shot.y > megaman.y + 24 ||
-        shot.y < megaman.y
-      ) {
-        this.drawBossPower(shot);
-        shot.x -= 2;
-      } else if (
-        shot.x < megaman.x + 40 &&
-        shot.x > megaman.x - 10 &&
-        shot.y < megaman.y + 30 &&
-        shot.y > megaman.y - 20
-      ) {
-        shotsWily.splice(i, 1);
-        megaman.receiveDamage(this.attackDamage);
-      } else {
-        shotsWily.splice(i, 1);
-      }
-    });
-  }
 }
 
-class Shot {
-  constructor(shooter, damage, x, y) {
-    this.shooter = shooter;
-    this.damage = damage;
-    this.x = x;
-    this.y = y;
-  }
-
-  // TERMINA O TESTE DE PROJETIL ****************
-}
+// TERMINA O TESTE DE PROJETIL ****************
 
 // TESTE PARA CRIAR OBJETO (PREDIO) ************
 
@@ -183,8 +125,6 @@ function updateEnemies() {
 
 myGameArea.start();
 
-// const player = new Character(0, 0, 20, 20, './images/skell.png');
-
 // console.log(player.img);
 // function draw(x, y) {
 //   const theCanvas = document.getElementById('canvas');
@@ -197,39 +137,3 @@ myGameArea.start();
 
 //   setTimeOut(`draw(${x}, ${y})`, 30);
 // }
-
-// document.onkeydown = function (e) {
-//   switch (
-//     e.keyCode
-// case 38: // <== up arrow
-// case 87:
-//   if (megaman.y === 100) {
-//     megaman.isJumping = true;
-//     if (!gameArea.checkGameOver() && !gameArea.checkWin()) jumpAudio.play();
-//   }
-//   break;
-// case 37: // <== left arrow
-// case 65:
-//   megaman.speedX = -1;
-//   megaman.isWalking = true;
-//   megaman.direction = 'left';
-//   break;
-// case 39: // <== right arrow
-// case 68:
-//   megaman.speedX = 1;
-//   megaman.isWalking = true;
-//   megaman.direction = 'right';
-//   break;
-// case 32: // <== space bar
-//   if (shotsMegaman.length < 3) {
-//     if (!gameArea.checkGameOver() && !gameArea.checkWin()) shotAudio.play();
-//     megaman.shoot('megaman');
-//     megaman.isShooting = true;
-//   }
-//   break;
-// case 13: // <== enter
-//   if (!startedGame) gameArea.start();
-//   break;
-//   ) {
-//   }
-// };
