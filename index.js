@@ -35,7 +35,7 @@ const myGameArea = {
   start: function () {
     this.interval = setInterval(updateGameArea, 20);
     player = new Character(880, 537, 70, 130, './images/elfo0.png');
-    torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
+    torre = new Tower(845, 350, 215, 300, './ImagesOnProgress/towerPlace.png');
     arrow = new Projectile(500, 500, 50, 20, './images/flecha.png');
   },
   stop: function () {
@@ -158,7 +158,7 @@ class Tower {
   }
   update() {
     // console.log(this);
-    // ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
   }
 }
 
