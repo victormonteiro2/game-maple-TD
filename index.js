@@ -19,6 +19,7 @@ archerShooting.src = './images/elfo1.png';
 const theCanvas = document.getElementById('canvas');
 const ctx = theCanvas.getContext('2d');
 let player;
+let torre;
 let shotsArcher = [];
 const enemiesList = [];
 
@@ -30,6 +31,7 @@ const myGameArea = {
   start: function () {
     this.interval = setInterval(updateGameArea, 20);
     player = new Character(880, 450, 60, 100, './images/elfo0.png');
+    torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
   },
   stop: function () {
     clearInterval(this.interval);
@@ -50,6 +52,7 @@ function updateGameArea() {
   myGameArea.clear();
   updateEnemies();
   player.update();
+  torre.update();
   // checkGameOver();
   // myGameArea.score();
 }
@@ -135,12 +138,34 @@ class Shot {
   // TERMINA O TESTE DE PROJETIL ****************
 }
 
+// TESTE PARA CRIAR OBJETO (PREDIO) ************
+
+class Tower {
+  // <== genereic character
+  constructor(x, y, width, height, imageSrc) {
+    this.img = new Image();
+
+    this.img.src = imageSrc;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.img.onload = this.update;
+  }
+  update() {
+    // console.log(this);
+    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+  }
+}
+
+// FIM DO TESTE
+
 function updateEnemies() {
   myGameArea.frames += 1;
   if (myGameArea.frames % 360 === 0) {
     let x = 0;
 
-    enemiesList.push(new Character(0, 462, 60, 80, './images/skell.png'));
+    // enemiesList.push(new Character(0, 462, 60, 80, './images/skell.png'));
   }
 
   for (i = 0; i < enemiesList.length; i++) {
