@@ -7,6 +7,9 @@ archer.src = './images/elfo0.png';
 let archerShooting = new Image();
 archerShooting.src = './images/elfo1.png';
 
+let flecha = new Image();
+flecha.src = './images/flecha.png';
+
 // const projectile = new Image();
 // projectile.src = '';
 
@@ -21,6 +24,7 @@ const ctx = theCanvas.getContext('2d');
 let player;
 let torre;
 let shotsArcher = [];
+const arrow = [];
 const enemiesList = [];
 
 const myGameArea = {
@@ -32,6 +36,7 @@ const myGameArea = {
     this.interval = setInterval(updateGameArea, 20);
     player = new Character(880, 450, 60, 100, './images/elfo0.png');
     torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
+    arrow = new Projectile(500, 300, 50, 20, './images/flecha.png');
   },
   stop: function () {
     clearInterval(this.interval);
@@ -53,6 +58,8 @@ function updateGameArea() {
   updateEnemies();
   player.update();
   torre.update();
+  // arrow.update();
+  updateProjectile();
   // checkGameOver();
   // myGameArea.score();
 }
@@ -78,6 +85,38 @@ class Character {
   // COMEÇA O TESTE DE PROJETIL **************
 }
 
+class Projectile {
+  constructor(x, y, width, height, imageSrc) {
+    this.img = new Image();
+
+    this.img.src = imageSrc;
+    this.x = x;
+    this.y = y;
+
+    this.width = width;
+    this.height = height;
+    this.img.onload = this.update;
+  }
+
+  update() {
+    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+  }
+}
+
+function updateProjectile() {
+  myGameArea.frames += 1;
+  if (myGameArea.frames % 240 === 0) {
+    let x = 0;
+
+    arrow.push(new Projectile(865, 485, 60, 30, './images/flecha.png'));
+  }
+
+  for (i = 0; i < arrow.length; i++) {
+    arrow[i].x += -10;
+    arrow[i].update();
+  }
+}
+
 // TERMINA O TESTE DE PROJETIL ****************
 
 // TESTE PARA CRIAR OBJETO (PREDIO) ************
@@ -96,7 +135,7 @@ class Tower {
   }
   update() {
     // console.log(this);
-    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+    // ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
   }
 }
 
