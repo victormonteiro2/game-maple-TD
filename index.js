@@ -12,8 +12,12 @@ let stage = new Image();
 stage.src = './images/background-game-short.png';
 let backgroundCanvas = new Image();
 backgroundCanvas.src = './images/megaman_title.jpg';
-let result = new Image();
-result.src = './images/background.jpg';
+let backgroundWin = new Image();
+backgroundWin.src = './images/background.jpg';
+let towerNormal = new Image();
+towerNormal.src = './images/towerNormal.png';
+let towerDown = new Image(); // ADICIONAR TORRE
+towerDown.src = './imagesOnProgress/towerPlace.png'; //ADICIONAR TORRE DOWN
 
 /* canvas and global variables*/
 let canvas = document.getElementById('canvas');
@@ -24,9 +28,10 @@ let requestId = null;
 let startedGame = false;
 
 window.onload = () => {
+  context.font = '50px Arial';
   context.fillStyle = 'white';
-  context.fillText('Press Enter to Start', 500, 400);
-  context.drawImage(backgroundCanvas, 1080, 768, 150, 100);
+  context.fillText('Press Enter to Start', 320, 400);
+  context.drawImage(backgroundCanvas, 1080, 768);
 };
 
 /* game functions */
@@ -126,16 +131,6 @@ class Player extends Character {
 
   newPos() {}
 
-  // jumpUpdate() {
-  //   if (this.y > this.maxJumpHigh && this.isJumping === true) {
-  //     this.y -= 2;
-  //   } else {
-  //     this.isJumping = false;
-  //   }
-  //   if (this.y < gameArea.ground && this.isJumping === false) {
-  //     this.y += 2;
-  //   }
-
   drawArcher() {
     if (this.isShooting) {
       context.drawImage(archerShooting, this.x, this.y);
@@ -143,13 +138,6 @@ class Player extends Character {
       // print this shooting
       context.drawImage(archerNormal, this.x, this.y);
     }
-
-    //   if (this.y === 530) {
-    //     context.drawImage(archerNormal, this.x, this.y);
-    //   } else if (this.isShooting) {
-    //     // print this shooting
-    //     context.drawImage(archerShooting, this.x, this.y);
-    //   }
   }
 
   drawArcherPower(shot) {
@@ -215,21 +203,21 @@ class Boss extends Character {
   shotUpdate() {
     shotsSkell.forEach((shot, i) => {
       if (
-        shot.x > archer.x + 20 ||
-        (shot.x < archer.x && shot.x > 1) ||
-        shot.y > archer.y + 24 ||
-        shot.y < archer.y
+        shot.x > torre.x + 20 ||
+        (shot.x < torre.x && shot.x > 1) ||
+        shot.y > torre.y + 24 ||
+        shot.y < torre.y
       ) {
         this.drawBossPower(shot);
         shot.x += 1;
       } else if (
-        shot.x < archer.x + 40 &&
-        shot.x > archer.x - 10 &&
-        shot.y < archer.y + 30 &&
-        shot.y > archer.y - 20
+        shot.x < torre.x + 40 &&
+        shot.x > torre.x - 10 &&
+        shot.y < torre.y + 30 &&
+        shot.y > torre.y - 20
       ) {
         shotsSkell.splice(i, 1);
-        archer.receiveDamage(this.attackDamage);
+        torre.receiveDamage(this.attackDamage);
       } else {
         shotsSkell.splice(i, 1);
       }
@@ -269,9 +257,61 @@ class Shot {
     );
   }
 }
+// ------------------------------- classe da tower (renderizar antes do personagem)
+
+class Tower extends Character {
+  constructor(x, y, width, height, imageSrc, health, attackDamage) {
+    super(x, y, width, height, imageSrc, health, attackDamage);
+  }
+
+  newPos() {}
+
+  drawTower() {
+    if (this.health > 0) {
+      context.drawImage(towerNormal, this.x, this.y);
+    } else if (this.isShooting) {
+      // print this shooting
+      context.drawImage(towerDown, this.x, this.y);
+    }
+  }
+}
+class Shot2 {
+  constructor(shooter, damage, x, y) {
+    this.shooter = shooter;
+    this.damage = damage;
+    this.x = x;
+    this.y = y;
+  }
+
+  left() {
+    return this.x;
+  }
+
+  right() {
+    return this.x + this.width;
+  }
+
+  top() {
+    return this.y;
+  }
+
+  bottom() {
+    return this.y + this.height;
+  }
+
+  crashWith(obstacle) {
+    return !(
+      this.bottom() < obstacle.top() ||
+      this.top() > obstacle.bottom() ||
+      this.right() < obstacle.left() ||
+      this.left() > obstacle.right()
+    );
+  }
+}
 
 const archer = new Player(860, 530, 60, 140, archerNormal, 100, 10);
 const skell = new Boss(0, 550, 70, 110, skellNormal, 100, 10);
+const torre = new Tower(780, 170, 100, 600, towerNormal, 100, 0);
 
 // POR ULTIMO
 
@@ -282,25 +322,26 @@ function update() {
     cancelAnimationFrame(update);
     // audio2.play();
     context.fillStyle = 'black';
-    context.fillRect(0, 0, 1000, 1000);
+    context.fillRect(0, 0, 1080, 768);
     context.fillStyle = 'white';
-    context.font = '20px Arial';
+    context.font = '50px Arial';
     // context.drawImage(backgroundLose, 30, 25, 100, 100);
-    context.fillText('You Lose!', 150, 78); // CORRIGIR IMAGENS WIN/LOSE
+    context.fillText('You Lose!', 1080, 768); // CORRIGIR IMAGENS WIN/LOSE
     setInterval(() => window.location.reload(), 6000);
   } else if (gameArea.checkWin()) {
     // audio3.pause();
     cancelAnimationFrame(update);
     // audio5.play();
-    context.drawImage(result, 0, 0, 300, 150);
+    context.drawImage(backgroundWin, 0, 0, 1080, 768);
     context.fillStyle = 'white';
-    context.font = '20px Arial';
-    context.fillText('You Win!', 60, 78);
+    context.font = '50px Arial';
+    context.fillText('You Win!', 400, 420);
     setInterval(() => window.location.reload(), 6000);
   } else {
     // audio3.play();
     archer.newPos();
     gameArea.clear();
+    torre.drawTower();
     archer.drawArcher();
     if (skell.health <= 0) {
       skell.drawBoss(skellDead);
