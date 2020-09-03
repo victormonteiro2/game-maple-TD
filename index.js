@@ -1,71 +1,82 @@
-const skell = new Image();
-skell.src = './images/skell.png';
-
-let archer = new Image();
-archer.src = './images/elfo0.png';
-
+const skellNormal = new Image();
+skellNormal.src = './images/skell.png';
+let archerNormal = new Image();
+archerNormal.src = './images/elfo0.png';
 let archerShooting = new Image();
 archerShooting.src = './images/elfo1.png';
-
 let flecha = new Image();
 flecha.src = './images/flecha.png';
+let stage = new Image();
+stage.src = './images/background-game-short.png';
+let backgroundCanvas = new Image();
+backgroundCanvas.src = './images/megaman_title.jpg';
 
-// const projectile = new Image();
-// projectile.src = '';
+/* canvas and global variables*/
+let canvas = document.getElementById('canvas');
+let context = canvas.getContext('2d');
+let shotsArcher = [];
+let shotsSkell = [];
+let requestId = null;
+let startedGame = false;
 
-// var canvas = document.getElementById('example');
-// var ctx = canvas.getContext('2d');
-
-// ctx.fillStyle = 'purple';
-// ctx.fillRect(260, 260, 50, 50);
-
-const theCanvas = document.getElementById('canvas');
-const ctx = theCanvas.getContext('2d');
-let player;
-let torre;
-let shots = [];
-const arrow = [];
-const enemiesList = [];
-
-const myGameArea = {
-  canvasWidth: theCanvas.width,
-  canvasHeight: theCanvas.height,
-  canvas: theCanvas,
-  frames: 0,
-  start: function () {
-    this.interval = setInterval(updateGameArea, 20);
-    player = new Character(880, 537, 70, 130, './images/elfo0.png');
-    torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
-    arrow = new Projectile(500, 500, 50, 20, './images/flecha.png');
-  },
-  stop: function () {
-    clearInterval(this.interval);
-  },
-  clear: function () {
-    ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-  }
-  // score: function () {
-  //   const points = Math.floor(this.frames / 5);
-
-  // ctx.font = '18px serif';
-  // ctx.fillStyle = 'black';
-  // ctx.fillText(`Score: ${points}`, 350, 50);
-  // }
+window.onload = () => {
+  context.fillStyle = 'white';
+  context.fillText('Press Enter to Start', 500, 400);
+  context.drawImage(backgroundCanvas, 1080, 768, 150, 100);
 };
 
-function updateGameArea() {
-  myGameArea.clear();
-  updateEnemies();
-  player.update();
-  torre.update();
-  // arrow.update();
-  updateProjectile();
-  // checkGameOver();
-  // myGameArea.score();
-}
+/* game functions */
+
+let gameArea = {
+  ground: 500,
+  frame: 0,
+  start: function () {
+    startedGame = true;
+    update();
+  },
+
+  clear: function () {
+    gameArea.frame += 1;
+    context.drawImage(stage, 0, 0, 1080, 768); // <== print stage
+
+    //   for (let i = 1; i <= megaman.health; i += 1) {
+    //     if (i % 25 === 0) {
+    //       context.lineWidth = 4;
+    //       context.fillStyle = 'blue';
+    //       context.strokeStyle = 'white';
+    //       context.strokeRect(5 + 1 * i, 10, 22, 4);
+    //       context.fillRect(5 + 1 * i, 10, 22, 4);
+    //     }
+    //   }
+
+    //   for (let i = 1; i < wily.health; i += 25) {
+    //     context.lineWidth = 4;
+    //     context.fillStyle = 'red';
+    //     context.strokeStyle = 'white';
+    //     context.strokeRect(250 - 1 * i, 10, 22, 4);
+    //     context.fillRect(250 + -1 * i, 10, 22, 4);
+    //   }
+  },
+  checkGameOver: function () {
+    if (archer.health <= 0) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+  checkWin: function () {
+    if (skell.health <= 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+};
+
+/* classes */
 
 class Character {
-  // <== genereic character
+  // <== generic character
   constructor(x, y, width, height, imageSrc, health, attackDamage) {
     this.img = new Image();
     this.img.src = imageSrc;
@@ -75,127 +86,378 @@ class Character {
     this.width = width;
     this.height = height;
     this.health = health;
+    this.isShooting = false;
     this.attackDamage = attackDamage;
-    this.img.onload = this.update;
-    this.id = Math.round(Math.random() * 10000);
+    this.speedX = 0;
   }
-
   receiveDamage(damage) {
     this.health -= damage;
   }
-
   shoot(shooter) {
-    shots.unshift(new Shot(shooter, this.attackDamage, this.x, this.y + 11));
-  }
-
-  update() {
-    // console.log(this);
-    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-  }
-  // COMEÇA O TESTE DE PROJETIL **************
-}
-
-class Projectile {
-  constructor(x, y, width, height, imageSrc) {
-    this.img = new Image();
-
-    this.img.src = imageSrc;
-    this.x = x;
-    this.y = y;
-
-    this.width = width;
-    this.height = height;
-    this.img.onload = this.update;
-  }
-
-  crashWith(arrow) {
-    return !(
-      this.bottom() < obstacle.top() ||
-      this.top() > obstacle.bottom() ||
-      this.right() < obstacle.left() ||
-      this.left() > arrow.right()
+    shotsArcher.unshift(
+      new Shot(shooter, this.attackDamage, this.x + 35, this.y + 11)
     );
   }
+}
 
-  update() {
-    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+class Player extends Character {
+  constructor() {
+    super(860, 530, 60, 140, './images/elfo0.png, 100, 1');
+  }
+
+  newPos() {
+    if (this.x < 0) this.x = 0;
+    if (this.x > 860) this.x = 860;
+    this.x += this.speedX;
+  }
+
+  // jumpUpdate() {
+  //   if (this.y > this.maxJumpHigh && this.isJumping === true) {
+  //     this.y -= 2;
+  //   } else {
+  //     this.isJumping = false;
+  //   }
+  //   if (this.y < gameArea.ground && this.isJumping === false) {
+  //     this.y += 2;
+  //   }
+
+  drawArcher() {
+    if (this.y === 530) {
+      context.drawImage(archerNormal, this.x, this.y);
+    } else if (this.isShooting) {
+      // print this shooting
+      context.drawImage(archerShooting, this.x, this.y);
+    }
+  }
+
+  drawArcherPower(shot) {
+    context.lineWidth = 1;
+    context.fillStyle = 'white';
+    context.beginPath();
+    context.arc(shot.x, shot.y, 3, 0, 2 * Math.PI);
+    context.fill();
+    context.strokeStyle = 'black';
+    context.stroke();
+  }
+
+  shotUpdate() {
+    shotsArcher.forEach((shot) => {
+      if (shot.x >= 0) {
+        this.drawArcherPower(shot);
+        shot.x += -20;
+        // set time to reset normal position image
+        if (shotsArcher.length > 0 && shotsArcher[0].x > archer.x + 60) {
+          archer.isShooting = false;
+        }
+      }
+      if (shot.x === skell.x - 1 || shot.x === skell.x - 2) {
+        shotsArcher.pop();
+        skell.receiveDamage(this.attackDamage);
+      }
+    });
   }
 }
 
-function updateProjectile() {
-  myGameArea.frames += 1;
-  if (myGameArea.frames % 120 === 0) {
-    let x = 0;
+// NPC --------------------------
 
-    arrow.push(new Projectile(865, 585, 60, 30, './images/flecha.png'));
+class Boss extends Character {
+  constructor(x, y, width, height, imageSrc, health, attackDamage) {
+    super(x, y, width, height, imageSrc, health, attackDamage);
   }
 
-  for (i = 0; i < arrow.length; i++) {
-    arrow[i].x += -20;
-    arrow[i].update();
+  shoot(shooter) {
+    shotsSkell
+      .unshift
+      // new Shot(
+      //   shooter,
+      //   this.attackDamage,
+      //   this.x,
+      //   this.y + 40 + 0 * Math.floor(Math.random() * 2)
+      // )
+      ();
   }
-  if (myObstacles[i].x <= 0) {
-    // COORD. MENOR Q ZERO => SPLICE (REMOVER DO ARRAY)
-    arrow.splice();
+
+  drawBoss() {
+    context.drawImage(skellNormal, skell.x, 523, 80, 100); // ???????
+  }
+
+  drawBossPower(shot) {
+    context.lineWidth = 1;
+    context.fillStyle = 'red';
+    context.beginPath();
+    context.arc(shot.x, shot.y, 10, 0, 2 * Math.PI);
+    context.fill();
+    context.strokeStyle = 'white';
+    context.stroke();
+  }
+
+  shotUpdate() {
+    shotsSkell.forEach((shot, i) => {
+      if (
+        shot.x > archer.x + 20 ||
+        (shot.x < archer.x && shot.x > 1) ||
+        shot.y > archer.y + 24 ||
+        shot.y < archer.y
+      ) {
+        this.drawBossPower(shot);
+        shot.x += 1;
+      } else if (
+        shot.x < archer.x + 40 &&
+        shot.x > archer.x - 10 &&
+        shot.y < archer.y + 30 &&
+        shot.y > archer.y - 20
+      ) {
+        shotsSkell.splice(i, 1);
+        archer.receiveDamage(this.attackDamage);
+      } else {
+        shotsSkell.splice(i, 1);
+      }
+    });
   }
 }
-
-// TERMINA O TESTE DE PROJETIL ****************
-
-// TESTE PARA CRIAR OBJETO (PREDIO) ************
-
-class Tower {
-  // <== genereic character
-  constructor(x, y, width, height, imageSrc) {
-    this.img = new Image();
-
-    this.img.src = imageSrc;
+class Shot {
+  constructor(shooter, damage, x, y) {
+    this.shooter = shooter;
+    this.damage = damage;
     this.x = x;
     this.y = y;
-    this.width = width;
-    this.height = height;
-    this.img.onload = this.update;
-  }
-  update() {
-    // console.log(this);
-    // ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
   }
 }
 
-// FIM DO TESTE
+const archer = new Player();
+const skell = new Boss(0, 550, 0, 0);
 
-function updateEnemies() {
-  myGameArea.frames += 1;
-  if (myGameArea.frames % 360 === 0) {
-    let x = 0;
+// POR ULTIMO
 
-    // enemiesList.push(new Character(0, 462, 60, 80, './images/skell.png'));
+function update() {
+  // <== game engine
+  if (gameArea.checkGameOver()) {
+    // audio3.pause();
+    cancelAnimationFrame(update);
+    // audio2.play();
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, 1000, 1000);
+    context.fillStyle = 'white';
+    context.font = '20px Arial';
+    // context.drawImage(backgroundLose, 30, 25, 100, 100);
+    context.fillText('You Lose!', 150, 78);
+    setInterval(() => window.location.reload(), 6000);
+  } else if (gameArea.checkWin()) {
+    // audio3.pause();
+    cancelAnimationFrame(update);
+    // audio5.play();
+    context.drawImage(result, 0, 0, 300, 150);
+    context.fillStyle = 'white';
+    context.font = '20px Arial';
+    context.fillText('You Win!', 60, 78);
+    setInterval(() => window.location.reload(), 6000);
+  } else {
+    // audio3.play();
+    archer.newPos();
+    gameArea.clear();
+    archer.drawArcher();
+    skell.drawBoss();
+    archer.shotUpdate();
+    skell.shotUpdate();
+    if (skell.health > 75) {
+      if (gameArea.frame % 90 === 0) skell.shoot('skell');
+    } else if (skell.health > 50) {
+      if (gameArea.frame % 75 === 0) skell.shoot('skell');
+    } else if (skell.health > 25) {
+      if (gameArea.frame % 60 === 0) skell.shoot('skell');
+    } else {
+      if (gameArea.frame % 45 === 0) skell.shoot('skell');
+    }
+    window.requestAnimationFrame(update);
   }
-
-  for (i = 0; i < enemiesList.length; i++) {
-    enemiesList[i].x += 0.5;
-    enemiesList[i].update();
-  }
-  // if (enemiesList[i].x === player.x) {
-  //   enemiesList[i].x - 1;
-  //   enemiesList[i].update();
-  // }
-  // if (enemiesList[i].x === player.x) {
-  //   enemiesList[i].remove[i];
-  // }
+  gameArea.checkGameOver();
 }
 
-myGameArea.start();
+document.onkeydown = function (e) {
+  switch (e.keyCode) {
+    case 13: // <== enter
+      if (!startedGame) gameArea.start();
+      break;
+    case 32: // <== space bar
+      if (shotsArcher.length < 3) {
+        if (!gameArea.checkGameOver() && !gameArea.checkWin());
+        archer.shoot('archer');
+        archer.isShooting = true;
+      }
+      break;
+  }
+};
 
-// console.log(player.img);
-// function draw(x, y) {
-//   const theCanvas = document.getElementById('canvas');
-//   const ctx = theCanvas.getContext('2d');
+document.onkeyup = function (e) {
+  archer.speedX = 0;
+  archer.isWalking = false;
+};
+// -------------------------------------------
 
-//   ctx.clearRect(0, 0, 300, 300);
-//   ctx.drawImage(skell, skellX, skellY, 100, 100);
+// let player;
+// let torre;
+// let shots = [];
+// const arrow = [];
+// const enemiesList = [];
 
-//   // skellX += 3;
+// const myGameArea = {
+//   canvasWidth: theCanvas.width,
+//   canvasHeight: theCanvas.height,
+//   canvas: theCanvas,
+//   frames: 0,
+//   start: function () {
+//     this.interval = setInterval(updateGameArea, 20);
+//     player = new Character(880, 537, 70, 130, './images/elfo0.png');
+//     torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
+//     arrow = new Projectile(500, 500, 50, 20, './images/flecha.png');
+//   },
+//   stop: function () {
+//     clearInterval(this.interval);
+//   },
+//   clear: function () {
+//     ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+//   }
+//   // score: function () {
+//   //   const points = Math.floor(this.frames / 5);
 
-//   setTimeOut(`draw(${x}, ${y})`, 30);
+//   // ctx.font = '18px serif';
+//   // ctx.fillStyle = 'black';
+//   // ctx.fillText(`Score: ${points}`, 350, 50);
+//   // }
+// };
+
+// function updateGameArea() {
+//   myGameArea.clear();
+//   updateEnemies();
+//   player.update();
+//   torre.update();
+//   // arrow.update();
+//   updateProjectile();
+//   // checkGameOver();
+//   // myGameArea.score();
 // }
+
+//     this.img.onload = this.update;
+//     this.id = Math.round(Math.random() * 10000);
+//   }
+
+//   receiveDamage(damage) {
+//     this.health -= damage;
+//   }
+
+//   shoot(shooter) {
+//     shots.unshift(new Shot(shooter, this.attackDamage, this.x, this.y + 11));
+//   }
+
+//   update() {
+//     // console.log(this);
+//     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+//   }
+//   // COMEÇA O TESTE DE PROJETIL **************
+// }
+
+// class Projectile {
+//   constructor(x, y, width, height, imageSrc) {
+//     this.img = new Image();
+
+//     this.img.src = imageSrc;
+//     this.x = x;
+//     this.y = y;
+
+//     this.width = width;
+//     this.height = height;
+//     this.img.onload = this.update;
+//   }
+
+//   // crashWith(arrow) {
+//   //   return !(
+//   //     this.bottom() < obstacle.top() ||
+//   //     this.top() > obstacle.bottom() ||
+//   //     this.right() < obstacle.left() ||
+//   //     this.left() > arrow.right()
+//   //   );
+//   // }
+
+//   update() {
+//     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+//   }
+// }
+
+// function updateProjectile() {
+//   myGameArea.frames += 1;
+//   if (myGameArea.frames % 120 === 0) {
+//     let x = 0;
+
+//     arrow.push(new Projectile(865, 585, 60, 30, './images/flecha.png'));
+//   }
+
+//   for (i = 0; i < arrow.length; i++) {
+//     arrow[i].x += -20;
+//     arrow[i].update();
+//   }
+//   if (arrow[i].x <= 0) {
+//     // COORD. MENOR Q ZERO => SPLICE (REMOVER DO ARRAY)
+//     arrow.splice();
+//     console.log(arrow);
+//   }
+// }
+
+// // TERMINA O TESTE DE PROJETIL ****************
+
+// // TESTE PARA CRIAR OBJETO (PREDIO) ************
+
+// class Tower {
+//   // <== genereic character
+//   constructor(x, y, width, height, imageSrc) {
+//     this.img = new Image();
+
+//     this.img.src = imageSrc;
+//     this.x = x;
+//     this.y = y;
+//     this.width = width;
+//     this.height = height;
+//     this.img.onload = this.update;
+//   }
+//   update() {
+//     // console.log(this);
+//     // ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+//   }
+// }
+
+// // FIM DO TESTE
+
+// function updateEnemies() {
+//   myGameArea.frames += 1;
+//   if (myGameArea.frames % 360 === 0) {
+//     let x = 0;
+
+//     enemiesList.push(new Character(0, 462, 60, 80, './images/skell.png'));
+//   }
+
+//   for (i = 0; i < enemiesList.length; i++) {
+//     enemiesList[i].x += 0.5;
+//     enemiesList[i].update();
+//   }
+//   // if (enemiesList[i].x === player.x) {
+//   //   enemiesList[i].x - 1;
+//   //   enemiesList[i].update();
+//   // }
+//   // if (enemiesList[i].x === player.x) {
+//   //   enemiesList[i].remove[i];
+//   // }
+// }
+
+// myGameArea.start();
+
+// // console.log(player.img);
+// // function draw(x, y) {
+// //   const theCanvas = document.getElementById('canvas');
+// //   const ctx = theCanvas.getContext('2d');
+
+// //   ctx.clearRect(0, 0, 300, 300);
+// //   ctx.drawImage(skell, skellX, skellY, 100, 100);
+
+// //   // skellX += 3;
+
+// //   setTimeOut(`draw(${x}, ${y})`, 30);
+// // }

@@ -14,14 +14,15 @@ body {
 }
 
 #canvas {
-  background-color: lightblue;
+  background-color: black;
   display: block;
   background-size: cover;
   border: 2px solid #00000080;
   box-shadow: 2px 2px 15px #00000080;
-  width: 60vw;
-  height: 75vh;
-  background-image: url('./images/background-game-short.png');
+  width: 65vw;
+  margin-bottom: 60px;
+
+  /* background-image: url('./images/background-game-short.png'); */
 }
 
 img {
@@ -29,9 +30,9 @@ img {
 }
 
 .margin-top {
-  margin-top: 50px;
+  margin-top: 0px;
 }
 
 /* .margin-bottom {
-    mar
+  padding-bottom: 50px;
 } */
