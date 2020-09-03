@@ -1,5 +1,7 @@
 const skellNormal = new Image();
 skellNormal.src = './images/skell.png';
+let skellDead = new Image();
+skellDead.src = './images/elfo3.png'; // COLOCAR DEPOIS
 let archerNormal = new Image();
 archerNormal.src = './images/elfo0.png';
 let archerShooting = new Image();
@@ -10,6 +12,8 @@ let stage = new Image();
 stage.src = './images/background-game-short.png';
 let backgroundCanvas = new Image();
 backgroundCanvas.src = './images/megaman_title.jpg';
+let result = new Image();
+result.src = './images/background.jpg';
 
 /* canvas and global variables*/
 let canvas = document.getElementById('canvas');
@@ -98,18 +102,29 @@ class Character {
       new Shot(shooter, this.attackDamage, this.x + 50, this.y + 50)
     );
   }
+  left() {
+    return this.x;
+  }
+
+  right() {
+    return this.x + this.width;
+  }
+
+  top() {
+    return this.y;
+  }
+
+  bottom() {
+    return this.y + this.height;
+  }
 }
 
 class Player extends Character {
-  constructor() {
-    super(860, 530, 60, 140, './images/elfo0.png', 100, 100);
+  constructor(x, y, width, height, imageSrc, health, attackDamage) {
+    super(x, y, width, height, imageSrc, health, attackDamage);
   }
 
-  newPos() {
-    if (this.x < 0) this.x = 0;
-    if (this.x > 860) this.x = 860;
-    this.x += this.speedX;
-  }
+  newPos() {}
 
   // jumpUpdate() {
   //   if (this.y > this.maxJumpHigh && this.isJumping === true) {
@@ -122,12 +137,19 @@ class Player extends Character {
   //   }
 
   drawArcher() {
-    if (this.y === 530) {
-      context.drawImage(archerNormal, this.x, this.y);
-    } else if (this.isShooting) {
-      // print this shooting
+    if (this.isShooting) {
       context.drawImage(archerShooting, this.x, this.y);
+    } else {
+      // print this shooting
+      context.drawImage(archerNormal, this.x, this.y);
     }
+
+    //   if (this.y === 530) {
+    //     context.drawImage(archerNormal, this.x, this.y);
+    //   } else if (this.isShooting) {
+    //     // print this shooting
+    //     context.drawImage(archerShooting, this.x, this.y);
+    //   }
   }
 
   drawArcherPower(shot) {
@@ -176,8 +198,8 @@ class Boss extends Character {
     );
   }
 
-  drawBoss() {
-    context.drawImage(skellNormal, 0, 523, 80, 100); // ???????
+  drawBoss(sprite) {
+    context.drawImage(sprite, 0, 523, 80, 100); // trocar por parametro (nome)
   }
 
   drawBossPower(shot) {
@@ -221,10 +243,35 @@ class Shot {
     this.x = x;
     this.y = y;
   }
+
+  left() {
+    return this.x;
+  }
+
+  right() {
+    return this.x + this.width;
+  }
+
+  top() {
+    return this.y;
+  }
+
+  bottom() {
+    return this.y + this.height;
+  }
+
+  crashWith(obstacle) {
+    return !(
+      this.bottom() < obstacle.top() ||
+      this.top() > obstacle.bottom() ||
+      this.right() < obstacle.left() ||
+      this.left() > obstacle.right()
+    );
+  }
 }
 
-const archer = new Player();
-const skell = new Boss(0, 550, 0, 0);
+const archer = new Player(860, 530, 60, 140, archerNormal, 100, 10);
+const skell = new Boss(0, 550, 70, 110, skellNormal, 100, 10);
 
 // POR ULTIMO
 
@@ -239,7 +286,7 @@ function update() {
     context.fillStyle = 'white';
     context.font = '20px Arial';
     // context.drawImage(backgroundLose, 30, 25, 100, 100);
-    context.fillText('You Lose!', 150, 78);
+    context.fillText('You Lose!', 150, 78); // CORRIGIR IMAGENS WIN/LOSE
     setInterval(() => window.location.reload(), 6000);
   } else if (gameArea.checkWin()) {
     // audio3.pause();
@@ -255,9 +302,19 @@ function update() {
     archer.newPos();
     gameArea.clear();
     archer.drawArcher();
-    skell.drawBoss();
+    if (skell.health <= 0) {
+      skell.drawBoss(skellDead);
+    } else {
+      skell.drawBoss(skellNormal);
+    }
     archer.shotUpdate();
     skell.shotUpdate();
+    shotsArcher.forEach((shot, i) => {
+      if (shot.crashWith(skell)) {
+        skell.receiveDamage(shot.damage);
+        shotsArcher.splice(i, 1);
+      }
+    });
     if (skell.health > 75) {
       if (gameArea.frame % 90 === 0) skell.shoot('skell');
     } else if (skell.health > 50) {
@@ -273,6 +330,7 @@ function update() {
 }
 
 document.onkeydown = function (e) {
+  e.preventDefault();
   switch (e.keyCode) {
     case 13: // <== enter
       if (!startedGame) gameArea.start();
@@ -290,6 +348,7 @@ document.onkeydown = function (e) {
 document.onkeyup = function (e) {
   archer.speedX = 0;
   archer.isWalking = false;
+  archer.isShooting = false;
 };
 // -------------------------------------------
 
