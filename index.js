@@ -95,14 +95,14 @@ class Character {
   }
   shoot(shooter) {
     shotsArcher.unshift(
-      new Shot(shooter, this.attackDamage, this.x + 35, this.y + 11)
+      new Shot(shooter, this.attackDamage, this.x + 50, this.y + 50)
     );
   }
 }
 
 class Player extends Character {
   constructor() {
-    super(860, 530, 60, 140, './images/elfo0.png, 100, 1');
+    super(860, 530, 60, 140, './images/elfo0.png', 100, 100);
   }
 
   newPos() {
@@ -134,7 +134,7 @@ class Player extends Character {
     context.lineWidth = 1;
     context.fillStyle = 'white';
     context.beginPath();
-    context.arc(shot.x, shot.y, 3, 0, 2 * Math.PI);
+    context.arc(shot.x, shot.y, 10, 0, 2 * Math.PI);
     context.fill();
     context.strokeStyle = 'black';
     context.stroke();
@@ -166,19 +166,18 @@ class Boss extends Character {
   }
 
   shoot(shooter) {
-    shotsSkell
-      .unshift
-      // new Shot(
-      //   shooter,
-      //   this.attackDamage,
-      //   this.x,
-      //   this.y + 40 + 0 * Math.floor(Math.random() * 2)
-      // )
-      ();
+    shotsSkell.unshift(
+      new Shot(
+        shooter,
+        this.attackDamage,
+        this.x,
+        this.y + 20 + 0 * Math.floor(Math.random() * 2)
+      )
+    );
   }
 
   drawBoss() {
-    context.drawImage(skellNormal, skell.x, 523, 80, 100); // ???????
+    context.drawImage(skellNormal, 0, 523, 80, 100); // ???????
   }
 
   drawBossPower(shot) {
@@ -279,7 +278,7 @@ document.onkeydown = function (e) {
       if (!startedGame) gameArea.start();
       break;
     case 32: // <== space bar
-      if (shotsArcher.length < 3) {
+      if (shotsArcher.length > -1) {
         if (!gameArea.checkGameOver() && !gameArea.checkWin());
         archer.shoot('archer');
         archer.isShooting = true;
