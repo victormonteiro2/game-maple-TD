@@ -173,21 +173,21 @@ class Player extends Character {
 class Boss extends Character {
   constructor(x, y, width, height, imageSrc, health, attackDamage) {
     super(x, y, width, height, imageSrc, health, attackDamage);
+    this.isShooting = false;
   }
-
   shoot(shooter) {
     shotsSkell.unshift(
       new Shot(
         shooter,
         this.attackDamage,
         this.x,
-        this.y + 20 + 0 * Math.floor(Math.random() * 2)
+        this.y + 50 + 0 * Math.floor(Math.random() * 2)
       )
     );
   }
 
   drawBoss(sprite) {
-    context.drawImage(sprite, 0, 523, 80, 100); // trocar por parametro (nome)
+    context.drawImage(sprite, this.x, this.y); // trocar por parametro (nome)
   }
 
   drawBossPower(shot) {
@@ -201,28 +201,44 @@ class Boss extends Character {
   }
 
   shotUpdate() {
-    shotsSkell.forEach((shot, i) => {
-      if (
-        shot.x > torre.x + 20 ||
-        (shot.x < torre.x && shot.x > 1) ||
-        shot.y > torre.y + 24 ||
-        shot.y < torre.y
-      ) {
+    shotsSkell.forEach((shot) => {
+      if (shot.x >= 0) {
         this.drawBossPower(shot);
-        shot.x += 1;
-      } else if (
-        shot.x < torre.x + 40 &&
-        shot.x > torre.x - 10 &&
-        shot.y < torre.y + 30 &&
-        shot.y > torre.y - 20
-      ) {
-        shotsSkell.splice(i, 1);
-        torre.receiveDamage(this.attackDamage);
-      } else {
-        shotsSkell.splice(i, 1);
+        shot.x += +20;
+        // set time to reset normal position image
+        if (shotsSkell.length > 0 && shotsSkell[0].x > skell.x + 60) {
+          skell.isShooting = false;
+        }
+      }
+      if (shot.x === archer.x + 1 || shot.x === archer.x + 2) {
+        shotsSkell.pop();
+        archer.receiveDamage(this.attackDamage);
       }
     });
   }
+  // shotUpdate() {
+  //   shotsSkell.forEach((shot, i) => {
+  //     if (
+  //       shot.x > torre.x + 20 ||
+  //       (shot.x < torre.x && shot.x > 1) ||
+  //       shot.y > torre.y + 24 ||
+  //       shot.y < torre.y
+  //     ) {
+  //       this.drawBossPower(shot);
+  //       shot.x += 1;
+  //     } else if (
+  //       shot.x < torre.x + 40 &&
+  //       shot.x > torre.x - 10 &&
+  //       shot.y < torre.y + 30 &&
+  //       shot.y > torre.y - 20
+  //     ) {
+  //       shotsSkell.splice(i, 1);
+  //       torre.receiveDamage(this.attackDamage);
+  //     } else {
+  //       shotsSkell.splice(i, 1);
+  //     }
+  //   });
+  // }
 }
 class Shot {
   constructor(shooter, damage, x, y) {
@@ -275,42 +291,9 @@ class Tower extends Character {
     }
   }
 }
-class Shot2 {
-  constructor(shooter, damage, x, y) {
-    this.shooter = shooter;
-    this.damage = damage;
-    this.x = x;
-    this.y = y;
-  }
-
-  left() {
-    return this.x;
-  }
-
-  right() {
-    return this.x + this.width;
-  }
-
-  top() {
-    return this.y;
-  }
-
-  bottom() {
-    return this.y + this.height;
-  }
-
-  crashWith(obstacle) {
-    return !(
-      this.bottom() < obstacle.top() ||
-      this.top() > obstacle.bottom() ||
-      this.right() < obstacle.left() ||
-      this.left() > obstacle.right()
-    );
-  }
-}
 
 const archer = new Player(860, 530, 60, 140, archerNormal, 100, 10);
-const skell = new Boss(0, 550, 70, 110, skellNormal, 100, 10);
+const skell = new Boss(0, 520, 70, 110, skellNormal, 100, 10);
 const torre = new Tower(780, 170, 100, 600, towerNormal, 100, 0);
 
 // POR ULTIMO
@@ -381,6 +364,13 @@ document.onkeydown = function (e) {
         if (!gameArea.checkGameOver() && !gameArea.checkWin());
         archer.shoot('archer');
         archer.isShooting = true;
+      }
+      break;
+    case 40: // <== space bar
+      if (shotsSkell.length > -1) {
+        if (!gameArea.checkGameOver() && !gameArea.checkWin());
+        skell.shoot('skell');
+        skell.isShooting = true;
       }
       break;
   }
