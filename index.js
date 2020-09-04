@@ -13,7 +13,9 @@ stage.src = './images/background-game-short.png';
 let backgroundCanvas = new Image();
 backgroundCanvas.src = './images/megaman_title.jpg';
 let backgroundWin = new Image();
-backgroundWin.src = './images/background.jpg';
+backgroundWin.src = './images/background-win.jpg';
+let backgroundLose = new Image();
+backgroundLose.src = './images/background-lose.jpg';
 let towerNormal = new Image();
 towerNormal.src = './images/towerNormal.png';
 let towerDown = new Image(); // ADICIONAR TORRE
@@ -48,23 +50,23 @@ let gameArea = {
     gameArea.frame += 1;
     context.drawImage(stage, 0, 0, 1080, 768); // <== print stage
 
-    //   for (let i = 1; i <= megaman.health; i += 1) {
-    //     if (i % 25 === 0) {
-    //       context.lineWidth = 4;
-    //       context.fillStyle = 'blue';
-    //       context.strokeStyle = 'white';
-    //       context.strokeRect(5 + 1 * i, 10, 22, 4);
-    //       context.fillRect(5 + 1 * i, 10, 22, 4);
-    //     }
-    //   }
+    for (let i = 1; i <= archer.health; i += 1) {
+      if (i % 25 === 0) {
+        context.lineWidth = 4;
+        context.fillStyle = 'blue';
+        context.strokeStyle = 'white';
+        context.strokeRect(5 + 1 * i, 10, 22, 4);
+        context.fillRect(5 + 1 * i, 10, 22, 4);
+      }
+    }
 
-    //   for (let i = 1; i < wily.health; i += 25) {
-    //     context.lineWidth = 4;
-    //     context.fillStyle = 'red';
-    //     context.strokeStyle = 'white';
-    //     context.strokeRect(250 - 1 * i, 10, 22, 4);
-    //     context.fillRect(250 + -1 * i, 10, 22, 4);
-    //   }
+    for (let i = 1; i < skell.health; i += 25) {
+      context.lineWidth = 4;
+      context.fillStyle = 'red';
+      context.strokeStyle = 'white';
+      context.strokeRect(250 - 1 * i, 10, 22, 4);
+      context.fillRect(250 + -1 * i, 10, 22, 4);
+    }
   },
   checkGameOver: function () {
     if (archer.health <= 0) {
@@ -104,7 +106,7 @@ class Character {
   }
   shoot(shooter) {
     shotsArcher.unshift(
-      new Shot(shooter, this.attackDamage, this.x + 50, this.y + 50)
+      new Shot(shooter, this.attackDamage, this.x, this.y + 50)
     );
   }
   left() {
@@ -151,7 +153,7 @@ class Player extends Character {
   }
 
   shotUpdate() {
-    shotsArcher.forEach((shot) => {
+    shotsArcher.forEach((shot, i) => {
       if (shot.x >= 0) {
         this.drawArcherPower(shot);
         shot.x += -20;
@@ -177,14 +179,11 @@ class Boss extends Character {
   }
   shoot(shooter) {
     shotsSkell.unshift(
-      new Shot(
-        shooter,
-        this.attackDamage,
-        this.x,
-        this.y + 50 + 0 * Math.floor(Math.random() * 2)
-      )
+      new Shot(shooter, this.attackDamage, this.x + 100, this.y + 50)
     );
   }
+
+  newPos() {}
 
   drawBoss(sprite) {
     context.drawImage(sprite, this.x, this.y); // trocar por parametro (nome)
@@ -201,10 +200,10 @@ class Boss extends Character {
   }
 
   shotUpdate() {
-    shotsSkell.forEach((shot) => {
+    shotsSkell.forEach((shot, i) => {
       if (shot.x >= 0) {
         this.drawBossPower(shot);
-        shot.x += +20;
+        shot.x += +1;
         // set time to reset normal position image
         if (shotsSkell.length > 0 && shotsSkell[0].x > skell.x + 60) {
           skell.isShooting = false;
@@ -219,21 +218,21 @@ class Boss extends Character {
   // shotUpdate() {
   //   shotsSkell.forEach((shot, i) => {
   //     if (
-  //       shot.x > torre.x + 20 ||
-  //       (shot.x < torre.x && shot.x > 1) ||
-  //       shot.y > torre.y + 24 ||
-  //       shot.y < torre.y
+  //       shot.x > archer.x + 20 ||
+  //       (shot.x < archer.x && shot.x > 1) ||
+  //       shot.y > archer.y + 24 ||
+  //       shot.y < archer.y
   //     ) {
   //       this.drawBossPower(shot);
   //       shot.x += 1;
   //     } else if (
-  //       shot.x < torre.x + 40 &&
-  //       shot.x > torre.x - 10 &&
-  //       shot.y < torre.y + 30 &&
-  //       shot.y > torre.y - 20
+  //       shot.x < archer.x + 40 &&
+  //       shot.x > archer.x - 10 &&
+  //       shot.y < archer.y + 30 &&
+  //       shot.y > archer.y - 20
   //     ) {
   //       shotsSkell.splice(i, 1);
-  //       torre.receiveDamage(this.attackDamage);
+  //       archer.receiveDamage(this.attackDamage);
   //     } else {
   //       shotsSkell.splice(i, 1);
   //     }
@@ -293,7 +292,7 @@ class Tower extends Character {
 }
 
 const archer = new Player(860, 530, 60, 140, archerNormal, 100, 10);
-const skell = new Boss(0, 520, 70, 110, skellNormal, 100, 10);
+const skell = new Boss(0, 520, 70, 110, skellNormal, 100, 1);
 const torre = new Tower(780, 170, 100, 600, towerNormal, 100, 0);
 
 // POR ULTIMO
@@ -308,7 +307,7 @@ function update() {
     context.fillRect(0, 0, 1080, 768);
     context.fillStyle = 'white';
     context.font = '50px Arial';
-    // context.drawImage(backgroundLose, 30, 25, 100, 100);
+    context.drawImage(backgroundLose, 0, 0, 1080, 768);
     context.fillText('You Lose!', 1080, 768); // CORRIGIR IMAGENS WIN/LOSE
     setInterval(() => window.location.reload(), 6000);
   } else if (gameArea.checkWin()) {
@@ -316,9 +315,9 @@ function update() {
     cancelAnimationFrame(update);
     // audio5.play();
     context.drawImage(backgroundWin, 0, 0, 1080, 768);
-    context.fillStyle = 'white';
+    context.fillStyle = 'black';
     context.font = '50px Arial';
-    context.fillText('You Win!', 400, 420);
+    context.fillText('You Win!', 1080, 768);
     setInterval(() => window.location.reload(), 6000);
   } else {
     // audio3.play();
@@ -339,6 +338,12 @@ function update() {
         shotsArcher.splice(i, 1);
       }
     });
+    // shotsSkell.forEach((shot, i) => {
+    //   if (shot.crashWith(skell)) {
+    //     archer.receiveDamage(shot.damage);
+    //     shotsSkell.splice(i, -1);
+    //   }
+    // });
     if (skell.health > 75) {
       if (gameArea.frame % 90 === 0) skell.shoot('skell');
     } else if (skell.health > 50) {
@@ -367,7 +372,7 @@ document.onkeydown = function (e) {
       }
       break;
     case 40: // <== space bar
-      if (shotsSkell.length > -1) {
+      if (shotsSkell.length > 1) {
         if (!gameArea.checkGameOver() && !gameArea.checkWin());
         skell.shoot('skell');
         skell.isShooting = true;
