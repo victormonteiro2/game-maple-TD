@@ -46,18 +46,8 @@ let gameArea = {
   ground: 500,
   frame: 0,
   start: function () {
-<<<<<<< HEAD
-    this.interval = setInterval(updateGameArea, 20);
-    player = new Character(880, 537, 70, 130, './images/elfo0.png');
-    torre = new Tower(845, 350, 215, 300, './ImagesOnProgress/towerPlace.png');
-    arrow = new Projectile(500, 500, 50, 20, './images/flecha.png');
-  },
-  stop: function () {
-    clearInterval(this.interval);
-=======
     startedGame = true;
     update();
->>>>>>> testB
   },
 
   clear: function () {
@@ -187,7 +177,7 @@ class Boss extends Character {
     context.lineWidth = 1;
     context.fillStyle = 'red';
     context.beginPath();
-    context.arc(shot.x, shot.y, 0.1, 0, 2 * Math.PI);
+    context.arc(shot.x + 70, shot.y - 30, 10, 0, 2 * Math.PI);
     context.fill();
     context.strokeStyle = 'white';
     context.stroke();
@@ -200,7 +190,7 @@ class Boss extends Character {
         this.drawBossPower(shot);
         shot.x += +1;
         // set time to reset normal position image
-        if (shotsSkell.length > 0 && shotsSkell[0].x > this.x + 60) {
+        if (shotsSkell.length > 20 && shotsSkell[0].x > this.x + 60) {
           this.isShooting = false;
         }
       }
@@ -234,11 +224,6 @@ class Shot {
   bottom() {
     return this.y + this.height;
   }
-<<<<<<< HEAD
-  update() {
-    // console.log(this);
-    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-=======
 
   crashWith(obstacle) {
     if (obstacle.health <= 0) {
@@ -251,7 +236,6 @@ class Shot {
       this.right() < obstacle.left() ||
       this.left() > obstacle.right()
     );
->>>>>>> testB
   }
 }
 // ------------------------------- classe da tower (renderizar antes do personagem)
@@ -279,8 +263,8 @@ const torre = new Tower(780, 170, 100, 600, towerNormal, 100, 0);
 // POR ULTIMO
 
 function generateEnemies() {
-  if (gameArea.frame % 120 === 0) {
-    enemiesList.push(new Boss(0, 520, 70, 110, skellNormal, 100, 50));
+  if (gameArea.frame % 360 === 0) {
+    enemiesList.push(new Boss(0, 525, 70, 110, skellNormal, 100, 30));
   }
 }
 
