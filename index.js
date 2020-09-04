@@ -215,29 +215,6 @@ class Boss extends Character {
       }
     });
   }
-  // shotUpdate() {
-  //   shotsSkell.forEach((shot, i) => {
-  //     if (
-  //       shot.x > archer.x + 20 ||
-  //       (shot.x < archer.x && shot.x > 1) ||
-  //       shot.y > archer.y + 24 ||
-  //       shot.y < archer.y
-  //     ) {
-  //       this.drawBossPower(shot);
-  //       shot.x += 1;
-  //     } else if (
-  //       shot.x < archer.x + 40 &&
-  //       shot.x > archer.x - 10 &&
-  //       shot.y < archer.y + 30 &&
-  //       shot.y > archer.y - 20
-  //     ) {
-  //       shotsSkell.splice(i, 1);
-  //       archer.receiveDamage(this.attackDamage);
-  //     } else {
-  //       shotsSkell.splice(i, 1);
-  //     }
-  //   });
-  // }
 }
 class Shot {
   constructor(shooter, damage, x, y) {
@@ -322,6 +299,7 @@ function update() {
   } else {
     // audio3.play();
     archer.newPos();
+    skell.newPos();
     gameArea.clear();
     torre.drawTower();
     archer.drawArcher();
@@ -338,12 +316,13 @@ function update() {
         shotsArcher.splice(i, 1);
       }
     });
-    // shotsSkell.forEach((shot, i) => {
-    //   if (shot.crashWith(skell)) {
-    //     archer.receiveDamage(shot.damage);
-    //     shotsSkell.splice(i, -1);
-    //   }
-    // });
+    shotsSkell.forEach((shot, i) => {
+      if (shot.crashWith(skell)) {
+        archer.receiveDamage(shot.damage);
+        shotsSkell.splice(i, -1);
+      }
+    });
+
     if (skell.health > 75) {
       if (gameArea.frame % 90 === 0) skell.shoot('skell');
     } else if (skell.health > 50) {
