@@ -1,7 +1,7 @@
 const skellNormal = new Image();
 skellNormal.src = './images/skell.png';
 let skellDead = new Image();
-skellDead.src = './images/elfo3.png'; // COLOCAR DEPOIS
+skellDead.src = './images/skellDead.png';
 let archerNormal = new Image();
 archerNormal.src = './images/elfo0.png';
 let archerShooting = new Image();
@@ -20,12 +20,16 @@ let towerNormal = new Image();
 towerNormal.src = './images/towerNormal.png';
 let towerDown = new Image(); // ADICIONAR TORRE
 towerDown.src = './imagesOnProgress/towerPlace.png'; //ADICIONAR TORRE DOWN
+let arrow = new Image();
+arrow.src = './images/arrow.png';
 
 /* canvas and global variables*/
 let canvas = document.getElementById('canvas');
 let context = canvas.getContext('2d');
 let shotsArcher = [];
 let shotsSkell = [];
+let enemiesList = [];
+let enemiesDead = [];
 let requestId = null;
 let startedGame = false;
 
@@ -59,24 +63,6 @@ let gameArea = {
   clear: function () {
     gameArea.frame += 1;
     context.drawImage(stage, 0, 0, 1080, 768); // <== print stage
-
-    for (let i = 1; i <= archer.health; i += 1) {
-      if (i % 25 === 0) {
-        context.lineWidth = 4;
-        context.fillStyle = 'blue';
-        context.strokeStyle = 'white';
-        context.strokeRect(5 + 1 * i, 10, 22, 4);
-        context.fillRect(5 + 1 * i, 10, 22, 4);
-      }
-    }
-
-    for (let i = 1; i < skell.health; i += 25) {
-      context.lineWidth = 4;
-      context.fillStyle = 'red';
-      context.strokeStyle = 'white';
-      context.strokeRect(250 - 1 * i, 10, 22, 4);
-      context.fillRect(250 + -1 * i, 10, 22, 4);
-    }
   },
   checkGameOver: function () {
     if (archer.health <= 0) {
@@ -86,7 +72,7 @@ let gameArea = {
     }
   },
   checkWin: function () {
-    if (skell.health <= 0) {
+    if (gameArea.frame === 3100) {
       return true;
     } else {
       return false;
@@ -153,13 +139,7 @@ class Player extends Character {
   }
 
   drawArcherPower(shot) {
-    context.lineWidth = 1;
-    context.fillStyle = 'white';
-    context.beginPath();
-    context.arc(shot.x, shot.y, 10, 0, 2 * Math.PI);
-    context.fill();
-    context.strokeStyle = 'black';
-    context.stroke();
+    context.drawImage(arrow, shot.x, 572);
   }
 
   shotUpdate() {
@@ -172,10 +152,6 @@ class Player extends Character {
           archer.isShooting = false;
         }
       }
-      if (shot.x === skell.x - 1 || shot.x === skell.x - 2) {
-        shotsArcher.pop();
-        skell.receiveDamage(this.attackDamage);
-      }
     });
   }
 }
@@ -186,6 +162,7 @@ class Boss extends Character {
   constructor(x, y, width, height, imageSrc, health, attackDamage) {
     super(x, y, width, height, imageSrc, health, attackDamage);
     this.isShooting = false;
+    this.isWalking = false;
   }
   shoot(shooter) {
     shotsSkell.unshift(
@@ -193,7 +170,14 @@ class Boss extends Character {
     );
   }
 
-  newPos() {}
+  newPos() {
+    if (this.x <= 700 && this.health > 0) {
+      this.isWalking = true;
+      this.x += 1;
+    } else {
+      this.isWalking = false;
+    }
+  }
 
   drawBoss(sprite) {
     context.drawImage(sprite, this.x, this.y); // trocar por parametro (nome)
@@ -203,10 +187,11 @@ class Boss extends Character {
     context.lineWidth = 1;
     context.fillStyle = 'red';
     context.beginPath();
-    context.arc(shot.x, shot.y, 10, 0, 2 * Math.PI);
+    context.arc(shot.x, shot.y, 0.1, 0, 2 * Math.PI);
     context.fill();
     context.strokeStyle = 'white';
     context.stroke();
+    console.log(shotsSkell);
   }
 
   shotUpdate() {
@@ -215,8 +200,8 @@ class Boss extends Character {
         this.drawBossPower(shot);
         shot.x += +1;
         // set time to reset normal position image
-        if (shotsSkell.length > 0 && shotsSkell[0].x > skell.x + 60) {
-          skell.isShooting = false;
+        if (shotsSkell.length > 0 && shotsSkell[0].x > this.x + 60) {
+          this.isShooting = false;
         }
       }
       if (shot.x === archer.x + 1 || shot.x === archer.x + 2) {
@@ -256,6 +241,10 @@ class Shot {
 =======
 
   crashWith(obstacle) {
+    if (obstacle.health <= 0) {
+      return false;
+    }
+
     return !(
       this.bottom() < obstacle.top() ||
       this.top() > obstacle.bottom() ||
@@ -285,10 +274,15 @@ class Tower extends Character {
 }
 
 const archer = new Player(860, 530, 60, 140, archerNormal, 100, 10);
-const skell = new Boss(0, 520, 70, 110, skellNormal, 100, 1);
 const torre = new Tower(780, 170, 100, 600, towerNormal, 100, 0);
 
 // POR ULTIMO
+
+function generateEnemies() {
+  if (gameArea.frame % 120 === 0) {
+    enemiesList.push(new Boss(0, 520, 70, 110, skellNormal, 100, 50));
+  }
+}
 
 function update() {
   // <== game engine
@@ -315,39 +309,55 @@ function update() {
   } else {
     // audio3.play();
     archer.newPos();
-    skell.newPos();
+
     gameArea.clear();
     torre.drawTower();
     archer.drawArcher();
-    if (skell.health <= 0) {
-      skell.drawBoss(skellDead);
-    } else {
-      skell.drawBoss(skellNormal);
-    }
     archer.shotUpdate();
-    skell.shotUpdate();
     shotsArcher.forEach((shot, i) => {
-      if (shot.crashWith(skell)) {
-        skell.receiveDamage(shot.damage);
-        shotsArcher.splice(i, 1);
+      enemiesList.forEach((skell) => {
+        if (shot.crashWith(skell)) {
+          skell.receiveDamage(shot.damage);
+          shotsArcher.splice(i, 1);
+        }
+      });
+    });
+    generateEnemies();
+    enemiesList.forEach((skell, i) => {
+      skell.newPos();
+      skell.shotUpdate();
+      if (skell.health <= 0) {
+        skell.drawBoss(skellDead);
+        enemiesList.splice(i, 1);
+      } else {
+        skell.drawBoss(skellNormal);
+      }
+      shotsSkell.forEach((shot, i) => {
+        if (shot.crashWith(skell)) {
+          archer.receiveDamage(shot.damage);
+          shotsSkell.splice(i, 1);
+        }
+      });
+      if (skell.health > 0) {
+        if (skell.health > 75) {
+          if (!skell.isWalking && gameArea.frame % 90 === 0) {
+            skell.shoot('skell');
+          }
+        } else if (skell.health > 50) {
+          if (!skell.isWalking && gameArea.frame % 75 === 0) {
+            skell.shoot('skell');
+          }
+        } else if (skell.health > 25) {
+          if (!skell.isWalking && gameArea.frame % 60 === 0) {
+            skell.shoot('skell');
+          }
+        } else {
+          if (!skell.isWalking && gameArea.frame % 45 === 0) {
+            skell.shoot('skell');
+          }
+        }
       }
     });
-    shotsSkell.forEach((shot, i) => {
-      if (shot.crashWith(skell)) {
-        archer.receiveDamage(shot.damage);
-        shotsSkell.splice(i, -1);
-      }
-    });
-
-    if (skell.health > 75) {
-      if (gameArea.frame % 90 === 0) skell.shoot('skell');
-    } else if (skell.health > 50) {
-      if (gameArea.frame % 75 === 0) skell.shoot('skell');
-    } else if (skell.health > 25) {
-      if (gameArea.frame % 60 === 0) skell.shoot('skell');
-    } else {
-      if (gameArea.frame % 45 === 0) skell.shoot('skell');
-    }
     window.requestAnimationFrame(update);
   }
   gameArea.checkGameOver();
@@ -366,187 +376,10 @@ document.onkeydown = function (e) {
         archer.isShooting = true;
       }
       break;
-    case 40: // <== space bar
-      if (shotsSkell.length > 1) {
-        if (!gameArea.checkGameOver() && !gameArea.checkWin());
-        skell.shoot('skell');
-        skell.isShooting = true;
-      }
-      break;
   }
 };
 
 document.onkeyup = function (e) {
-  archer.speedX = 0;
   archer.isWalking = false;
   archer.isShooting = false;
 };
-// -------------------------------------------
-
-// let player;
-// let torre;
-// let shots = [];
-// const arrow = [];
-// const enemiesList = [];
-
-// const myGameArea = {
-//   canvasWidth: theCanvas.width,
-//   canvasHeight: theCanvas.height,
-//   canvas: theCanvas,
-//   frames: 0,
-//   start: function () {
-//     this.interval = setInterval(updateGameArea, 20);
-//     player = new Character(880, 537, 70, 130, './images/elfo0.png');
-//     torre = new Tower(850, 235, 215, 300, './ImagesOnProgress/towerPlace.png');
-//     arrow = new Projectile(500, 500, 50, 20, './images/flecha.png');
-//   },
-//   stop: function () {
-//     clearInterval(this.interval);
-//   },
-//   clear: function () {
-//     ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-//   }
-//   // score: function () {
-//   //   const points = Math.floor(this.frames / 5);
-
-//   // ctx.font = '18px serif';
-//   // ctx.fillStyle = 'black';
-//   // ctx.fillText(`Score: ${points}`, 350, 50);
-//   // }
-// };
-
-// function updateGameArea() {
-//   myGameArea.clear();
-//   updateEnemies();
-//   player.update();
-//   torre.update();
-//   // arrow.update();
-//   updateProjectile();
-//   // checkGameOver();
-//   // myGameArea.score();
-// }
-
-//     this.img.onload = this.update;
-//     this.id = Math.round(Math.random() * 10000);
-//   }
-
-//   receiveDamage(damage) {
-//     this.health -= damage;
-//   }
-
-//   shoot(shooter) {
-//     shots.unshift(new Shot(shooter, this.attackDamage, this.x, this.y + 11));
-//   }
-
-//   update() {
-//     // console.log(this);
-//     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-//   }
-//   // COMEÇA O TESTE DE PROJETIL **************
-// }
-
-// class Projectile {
-//   constructor(x, y, width, height, imageSrc) {
-//     this.img = new Image();
-
-//     this.img.src = imageSrc;
-//     this.x = x;
-//     this.y = y;
-
-//     this.width = width;
-//     this.height = height;
-//     this.img.onload = this.update;
-//   }
-
-//   // crashWith(arrow) {
-//   //   return !(
-//   //     this.bottom() < obstacle.top() ||
-//   //     this.top() > obstacle.bottom() ||
-//   //     this.right() < obstacle.left() ||
-//   //     this.left() > arrow.right()
-//   //   );
-//   // }
-
-//   update() {
-//     ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-//   }
-// }
-
-// function updateProjectile() {
-//   myGameArea.frames += 1;
-//   if (myGameArea.frames % 120 === 0) {
-//     let x = 0;
-
-//     arrow.push(new Projectile(865, 585, 60, 30, './images/flecha.png'));
-//   }
-
-//   for (i = 0; i < arrow.length; i++) {
-//     arrow[i].x += -20;
-//     arrow[i].update();
-//   }
-//   if (arrow[i].x <= 0) {
-//     // COORD. MENOR Q ZERO => SPLICE (REMOVER DO ARRAY)
-//     arrow.splice();
-//     console.log(arrow);
-//   }
-// }
-
-// // TERMINA O TESTE DE PROJETIL ****************
-
-// // TESTE PARA CRIAR OBJETO (PREDIO) ************
-
-// class Tower {
-//   // <== genereic character
-//   constructor(x, y, width, height, imageSrc) {
-//     this.img = new Image();
-
-//     this.img.src = imageSrc;
-//     this.x = x;
-//     this.y = y;
-//     this.width = width;
-//     this.height = height;
-//     this.img.onload = this.update;
-//   }
-//   update() {
-//     // console.log(this);
-//     // ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-//   }
-// }
-
-// // FIM DO TESTE
-
-// function updateEnemies() {
-//   myGameArea.frames += 1;
-//   if (myGameArea.frames % 360 === 0) {
-//     let x = 0;
-
-//     enemiesList.push(new Character(0, 462, 60, 80, './images/skell.png'));
-//   }
-
-//   for (i = 0; i < enemiesList.length; i++) {
-//     enemiesList[i].x += 0.5;
-//     enemiesList[i].update();
-//   }
-//   // if (enemiesList[i].x === player.x) {
-//   //   enemiesList[i].x - 1;
-//   //   enemiesList[i].update();
-//   // }
-//   // if (enemiesList[i].x === player.x) {
-//   //   enemiesList[i].remove[i];
-//   // }
-// }
-
-// myGameArea.start();
-
-// // console.log(player.img);
-// // function draw(x, y) {
-// //   const theCanvas = document.getElementById('canvas');
-// //   const ctx = theCanvas.getContext('2d');
-
-// //   ctx.clearRect(0, 0, 300, 300);
-// //   ctx.drawImage(skell, skellX, skellY, 100, 100);
-
-// //   // skellX += 3;
-
-// //   setTimeOut(`draw(${x}, ${y})`, 30);
-// // }
