@@ -28,6 +28,8 @@ let canvas = document.getElementById('canvas');
 let context = canvas.getContext('2d');
 let shotsArcher = [];
 let shotsSkell = [];
+let enemiesList = [];
+let enemiesDead = [];
 let requestId = null;
 let startedGame = false;
 
@@ -52,23 +54,23 @@ let gameArea = {
     gameArea.frame += 1;
     context.drawImage(stage, 0, 0, 1080, 768); // <== print stage
 
-    for (let i = 1; i <= archer.health; i += 1) {
-      if (i % 25 === 0) {
-        context.lineWidth = 4;
-        context.fillStyle = 'blue';
-        context.strokeStyle = 'white';
-        context.strokeRect(5 + 1 * i, 10, 22, 4);
-        context.fillRect(5 + 1 * i, 10, 22, 4);
-      }
-    }
+    // for (let i = 1; i <= archer.health; i += 1) {
+    //   if (i % 25 === 0) {
+    //     context.lineWidth = 4;
+    //     context.fillStyle = 'blue';
+    //     context.strokeStyle = 'white';
+    //     context.strokeRect(5 + 1 * i, 10, 22, 4);
+    //     context.fillRect(5 + 1 * i, 10, 22, 4);
+    //   }
+    // }
 
-    for (let i = 1; i < skell.health; i += 25) {
-      context.lineWidth = 4;
-      context.fillStyle = 'red';
-      context.strokeStyle = 'white';
-      context.strokeRect(250 - 1 * i, 10, 22, 4);
-      context.fillRect(250 + -1 * i, 10, 22, 4);
-    }
+    // for (let i = 1; i < skell.health; i += 25) {
+    //   context.lineWidth = 4;
+    //   context.fillStyle = 'red';
+    //   context.strokeStyle = 'white';
+    //   context.strokeRect(250 - 1 * i, 10, 22, 4);
+    //   context.fillRect(250 + -1 * i, 10, 22, 4);
+    // }
   },
   checkGameOver: function () {
     if (archer.health <= 0) {
@@ -78,7 +80,7 @@ let gameArea = {
     }
   },
   checkWin: function () {
-    if (skell.health <= 0) {
+    if (gameArea.frame === 1000000) {
       return true;
     } else {
       return false;
@@ -164,10 +166,10 @@ class Player extends Character {
           archer.isShooting = false;
         }
       }
-      if (shot.x === skell.x - 1 || shot.x === skell.x - 2) {
-        shotsArcher.pop();
-        skell.receiveDamage(this.attackDamage);
-      }
+      // if (shot.x === skell.x - 1 || shot.x === skell.x - 2) {
+      //   shotsArcher.pop();
+
+      // }
     });
   }
 }
@@ -187,7 +189,7 @@ class Boss extends Character {
   }
 
   newPos() {
-    if (this.x <= 700) {
+    if (this.x <= 700 && this.health > 0) {
       this.isWalking = true;
       this.x += 1;
     } else {
@@ -216,8 +218,8 @@ class Boss extends Character {
         this.drawBossPower(shot);
         shot.x += +1;
         // set time to reset normal position image
-        if (shotsSkell.length > 0 && shotsSkell[0].x > skell.x + 60) {
-          skell.isShooting = false;
+        if (shotsSkell.length > 0 && shotsSkell[0].x > this.x + 60) {
+          this.isShooting = false;
         }
       }
       if (shot.x === archer.x + 1 || shot.x === archer.x + 2) {
@@ -252,6 +254,10 @@ class Shot {
   }
 
   crashWith(obstacle) {
+    if (obstacle.health <= 0) {
+      return false;
+    }
+
     return !(
       this.bottom() < obstacle.top() ||
       this.top() > obstacle.bottom() ||
@@ -280,10 +286,15 @@ class Tower extends Character {
 }
 
 const archer = new Player(860, 530, 60, 140, archerNormal, 100, 10);
-const skell = new Boss(0, 520, 70, 110, skellNormal, 100, 1);
 const torre = new Tower(780, 170, 100, 600, towerNormal, 100, 0);
 
 // POR ULTIMO
+
+function generateEnemies() {
+  if (gameArea.frame % 120 === 0) {
+    enemiesList.push(new Boss(0, 520, 70, 110, skellNormal, 100, 10));
+  }
+}
 
 function update() {
   // <== game engine
@@ -310,47 +321,55 @@ function update() {
   } else {
     // audio3.play();
     archer.newPos();
-    skell.newPos();
+
     gameArea.clear();
     torre.drawTower();
     archer.drawArcher();
     archer.shotUpdate();
-    skell.shotUpdate();
-    if (skell.health <= 0) {
-      skell.drawBoss(skellDead);
-    } else {
-      skell.drawBoss(skellNormal);
-    }
     shotsArcher.forEach((shot, i) => {
-      if (shot.crashWith(skell)) {
-        skell.receiveDamage(shot.damage);
-        shotsArcher.splice(i, 1);
+      enemiesList.forEach((skell) => {
+        if (shot.crashWith(skell)) {
+          skell.receiveDamage(shot.damage);
+          shotsArcher.splice(i, 1);
+        }
+      });
+    });
+    generateEnemies();
+    enemiesList.forEach((skell, i) => {
+      skell.newPos();
+      skell.shotUpdate();
+      if (skell.health <= 0) {
+        skell.drawBoss(skellDead);
+        enemiesList.splice(i, 1);
+      } else {
+        skell.drawBoss(skellNormal);
+      }
+      shotsSkell.forEach((shot, i) => {
+        if (shot.crashWith(skell)) {
+          archer.receiveDamage(shot.damage);
+          shotsSkell.splice(i, 1);
+        }
+      });
+      if (skell.health > 0) {
+        if (skell.health > 75) {
+          if (!skell.isWalking && gameArea.frame % 90 === 0) {
+            skell.shoot('skell');
+          }
+        } else if (skell.health > 50) {
+          if (!skell.isWalking && gameArea.frame % 75 === 0) {
+            skell.shoot('skell');
+          }
+        } else if (skell.health > 25) {
+          if (!skell.isWalking && gameArea.frame % 60 === 0) {
+            skell.shoot('skell');
+          }
+        } else {
+          if (!skell.isWalking && gameArea.frame % 45 === 0) {
+            skell.shoot('skell');
+          }
+        }
       }
     });
-    shotsSkell.forEach((shot, i) => {
-      if (shot.crashWith(skell)) {
-        archer.receiveDamage(shot.damage);
-        shotsSkell.splice(i, -1);
-      }
-    });
-
-    if (skell.health > 75) {
-      if (!skell.isWalking && gameArea.frame % 90 === 0) {
-        skell.shoot('skell');
-      }
-    } else if (skell.health > 50) {
-      if (!skell.isWalking && gameArea.frame % 75 === 0) {
-        skell.shoot('skell');
-      }
-    } else if (skell.health > 25) {
-      if (!skell.isWalking && gameArea.frame % 60 === 0) {
-        skell.shoot('skell');
-      }
-    } else {
-      if (!skell.isWalking && gameArea.frame % 45 === 0) {
-        skell.shoot('skell');
-      }
-    }
     window.requestAnimationFrame(update);
   }
   gameArea.checkGameOver();
