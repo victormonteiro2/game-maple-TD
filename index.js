@@ -20,6 +20,8 @@ let towerNormal = new Image();
 towerNormal.src = './images/towerNormal.png';
 let towerDown = new Image(); // ADICIONAR TORRE
 towerDown.src = './imagesOnProgress/towerPlace.png'; //ADICIONAR TORRE DOWN
+let arrow = new Image();
+arrow.src = './images/arrow.png';
 
 /* canvas and global variables*/
 let canvas = document.getElementById('canvas');
@@ -143,13 +145,13 @@ class Player extends Character {
   }
 
   drawArcherPower(shot) {
-    context.lineWidth = 1;
-    context.fillStyle = 'white';
-    context.beginPath();
-    context.arc(shot.x, shot.y, 10, 0, 2 * Math.PI);
-    context.fill();
-    context.strokeStyle = 'black';
-    context.stroke();
+    context.drawImage(arrow, shot.x, 572);
+    // context.fillStyle = 'white';
+    // context.beginPath();
+    // context.arc(shot.x, shot.y, 10, 0, 2 * Math.PI);
+    // context.fill();
+    // context.strokeStyle = 'black';
+    // context.stroke();
   }
 
   shotUpdate() {
@@ -176,6 +178,7 @@ class Boss extends Character {
   constructor(x, y, width, height, imageSrc, health, attackDamage) {
     super(x, y, width, height, imageSrc, health, attackDamage);
     this.isShooting = false;
+    this.isWalking = false;
   }
   shoot(shooter) {
     shotsSkell.unshift(
@@ -183,7 +186,14 @@ class Boss extends Character {
     );
   }
 
-  newPos() {}
+  newPos() {
+    if (this.x <= 700) {
+      this.isWalking = true;
+      this.x += 1;
+    } else {
+      this.isWalking = false;
+    }
+  }
 
   drawBoss(sprite) {
     context.drawImage(sprite, this.x, this.y); // trocar por parametro (nome)
@@ -197,6 +207,7 @@ class Boss extends Character {
     context.fill();
     context.strokeStyle = 'white';
     context.stroke();
+    console.log(shotsSkell);
   }
 
   shotUpdate() {
@@ -303,13 +314,13 @@ function update() {
     gameArea.clear();
     torre.drawTower();
     archer.drawArcher();
+    archer.shotUpdate();
+    skell.shotUpdate();
     if (skell.health <= 0) {
       skell.drawBoss(skellDead);
     } else {
       skell.drawBoss(skellNormal);
     }
-    archer.shotUpdate();
-    skell.shotUpdate();
     shotsArcher.forEach((shot, i) => {
       if (shot.crashWith(skell)) {
         skell.receiveDamage(shot.damage);
@@ -324,13 +335,21 @@ function update() {
     });
 
     if (skell.health > 75) {
-      if (gameArea.frame % 90 === 0) skell.shoot('skell');
+      if (!skell.isWalking && gameArea.frame % 90 === 0) {
+        skell.shoot('skell');
+      }
     } else if (skell.health > 50) {
-      if (gameArea.frame % 75 === 0) skell.shoot('skell');
+      if (!skell.isWalking && gameArea.frame % 75 === 0) {
+        skell.shoot('skell');
+      }
     } else if (skell.health > 25) {
-      if (gameArea.frame % 60 === 0) skell.shoot('skell');
+      if (!skell.isWalking && gameArea.frame % 60 === 0) {
+        skell.shoot('skell');
+      }
     } else {
-      if (gameArea.frame % 45 === 0) skell.shoot('skell');
+      if (!skell.isWalking && gameArea.frame % 45 === 0) {
+        skell.shoot('skell');
+      }
     }
     window.requestAnimationFrame(update);
   }
@@ -350,13 +369,13 @@ document.onkeydown = function (e) {
         archer.isShooting = true;
       }
       break;
-    case 40: // <== space bar
-      if (shotsSkell.length > 1) {
-        if (!gameArea.checkGameOver() && !gameArea.checkWin());
-        skell.shoot('skell');
-        skell.isShooting = true;
-      }
-      break;
+    // case 40: // <== space bar
+    //   if (shotsSkell.length > 1) {
+    //     if (!gameArea.checkGameOver() && !gameArea.checkWin());
+    //     skell.shoot('skell');
+    //     skell.isShooting = true;
+    //   }
+    //   break;
   }
 };
 
